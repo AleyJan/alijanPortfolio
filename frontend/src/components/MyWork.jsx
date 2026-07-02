@@ -1,89 +1,205 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
-// Scatter targets (offset from centre, in vw/vh) + start/end rotation + size.
-// One entry per project, in order. Tuned to spread across the screen.
-const LAYOUT = [
-  { x: -34, y: -18, rot0: -6, rot: -9, w: "clamp(150px, 19vw, 300px)" },
-  { x: 33, y: -22, rot0: 5, rot: 8, w: "clamp(140px, 17vw, 270px)" },
-  { x: -30, y: 20, rot0: -3, rot: 6, w: "clamp(150px, 18vw, 290px)" },
-  { x: 34, y: 19, rot0: 4, rot: -7, w: "clamp(130px, 16vw, 260px)" },
-  { x: 2, y: -28, rot0: 2, rot: 3, w: "clamp(140px, 17vw, 270px)" },
-  { x: -7, y: 29, rot0: -5, rot: -4, w: "clamp(150px, 18vw, 280px)" },
-  { x: 16, y: 4, rot0: 6, rot: 10, w: "clamp(120px, 14vw, 230px)" },
-];
+// How many projects to feature here; the rest live on the /projects page.
+const MAX_FEATURED = 5;
 
-function ProjectCard({ project, progress, layout }) {
-  const x = useTransform(progress, [0, 1], ["0vw", `${layout.x}vw`]);
-  const y = useTransform(progress, [0, 1], ["0vh", `${layout.y}vh`]);
-  const rotate = useTransform(progress, [0, 1], [layout.rot0, layout.rot]);
+// New project shape uses images[]/live; fall back to the old img/href fields.
+const projImg = (p) => (p.images && p.images[0]) || p.img || "";
+const projLive = (p) => p.live || p.href || "";
+// Scroll distance (in vh) the pinned stage holds for each project before the
+// section releases. Higher = slower reveal.
+const SCROLL_PER_PROJECT = 34;
+// Extra pinned scroll (vh) held after the last project — this is the room the
+// Contact section rises up over. Must match Contact's `lg:-mt-[100vh]`.
+const RISE_ROOM = 100;
 
-  return (
-    <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 hover:z-50">
-      {/* scroll-driven scatter layer */}
-      <motion.div style={{ x, y, rotate }}>
-        {/* hover layer — separate transform so it doesn't fight the scatter */}
-        <motion.a
-          href={project.href}
-          target="_blank"
-          rel="noreferrer"
-          whileHover={{ scale: 1.06, y: -12 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="group relative block overflow-hidden rounded-xl shadow-2xl shadow-black/30 ring-1 ring-black/10"
-          style={{ width: layout.w }}
-        >
-          <img
-            src={project.img}
-            alt={project.title}
-            draggable="false"
-            loading="lazy"
-            className="block h-auto w-full object-cover"
-          />
-          {/* title, fades in on hover */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <span className="text-sm font-medium text-white">
-              {project.title}
-            </span>
-          </div>
-        </motion.a>
-      </motion.div>
-    </div>
-  );
-}
-
-export default function MyWork({ heading = "MY WORK", projects = [] }) {
+export default function MyWork({ heading = "My Work", projects = [] }) {
   const sectionRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
+  const shown = projects.slice(0, MAX_FEATURED);
+  const count = shown.length;
+
+  // Desktop gets the pinned, scroll-driven index; below lg we render a simple
+  // stacked list of linked project cards instead.
+  const [desktop, setDesktop] = useState(
+    typeof window !== "undefined" && window.innerWidth >= 1024,
+  );
+  useEffect(() => {
+    const onResize = () => setDesktop(window.innerWidth >= 1024);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const [active, setActive] = useState(0);
+
+  // Map scroll position within the pinned section to the active project index.
+  // Computed straight from the section's rect so it's robust and predictable:
+  // -rect.top is how far we've scrolled into the section; the pinnable span is
+  // the section height minus one viewport (the sticky stage).
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || !count) return;
+    let raf = 0;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      // Projects reveal over the first (count * SCROLL_PER_PROJECT) vh of scroll.
+      // The remaining RISE_ROOM keeps the last project pinned while Contact rises.
+      const revealPx = ((count * SCROLL_PER_PROJECT) / 100) * window.innerHeight;
+      const scrolled = Math.max(0, -rect.top);
+      const p = revealPx > 0 ? Math.min(1, scrolled / revealPx) : 0;
+      const i = Math.min(count - 1, Math.max(0, Math.floor(p * count)));
+      setActive(i);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [count, desktop]);
+
+  if (!count) return null;
+
+  const cur = shown[Math.min(active, count - 1)];
+  const sectionHeight = 100 + count * SCROLL_PER_PROJECT + RISE_ROOM; // vh
+
+  const moreLink = (
+    <Link
+      to="/projects"
+      className="inline-flex items-center gap-2 rounded-full border border-black/20 px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-black hover:text-white"
+    >
+      More projects <span aria-hidden="true">→</span>
+    </Link>
+  );
 
   return (
     <section
       ref={sectionRef}
       id="projects"
       data-theme="light"
-      className="relative h-[250vh] w-full bg-white text-black"
+      className="relative w-full bg-white text-black"
+      style={desktop ? { height: `${sectionHeight}vh` } : undefined}
     >
-      {/* Pinned stage: heading + the pile that scatters on scroll */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Fade the section out into Services so there's no hard boundary */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-48 bg-gradient-to-t from-white to-transparent" />
+      {/* ---------- Mobile / tablet: simple stacked list ---------- */}
+      <div className="px-6 py-20 sm:px-10 lg:hidden">
         <h2
-          className="absolute left-1/2 top-[5%] -translate-x-1/2 select-none text-center font-sans font-extrabold uppercase leading-none tracking-tight text-black"
-          style={{ fontSize: "clamp(3.5rem, 13.5vw, 12.5rem)" }}
+          className="font-sans font-extrabold tracking-tight"
+          style={{ fontSize: "clamp(2.9rem, 8vw, 2.75rem)" }}
         >
           {heading}
         </h2>
+        <div className="mt-10 flex flex-col gap-12">
+          {shown.map((p) => (
+            <a
+              key={p.title}
+              href={projLive(p) || undefined}
+              target="_blank"
+              rel="noreferrer"
+              className="group block"
+            >
+              <div className="overflow-hidden rounded-2xl ring-1 ring-black/10">
+                <img
+                  src={projImg(p)}
+                  alt={p.title}
+                  loading="lazy"
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
+              <h3 className="mt-4 text-2xl font-extrabold tracking-tight">
+                {p.title}
+              </h3>
+            </a>
+          ))}
+        </div>
+        <div className="mt-12">{moreLink}</div>
+      </div>
 
-        {projects.map((project, i) => (
-          <ProjectCard
-            key={project.title}
-            project={project}
-            progress={scrollYProgress}
-            layout={LAYOUT[i % LAYOUT.length]}
-          />
-        ))}
+      {/* ---------- Desktop: pinned scroll-driven index ---------- */}
+      <div className="sticky top-0 hidden h-screen w-full lg:block">
+        <div className="mx-auto flex h-full max-w-7xl flex-col justify-center px-10 pt-24 pb-12">
+          <h2
+            className="mb-8 translate-y-[9px] font-sans font-extrabold tracking-tight"
+            style={{ fontSize: "clamp(2.6rem, 6vw, 4.5rem)" }}
+          >
+            {heading}
+          </h2>
+
+          <div className="grid grid-cols-2 items-center gap-16">
+            {/* Left: project names + more link */}
+            <div>
+              <ul className="flex flex-col gap-1">
+                {shown.map((p, i) => {
+                  const on = active === i;
+                  return (
+                    <li key={p.title}>
+                      <a
+                        href={p.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex items-baseline gap-4 py-1.5 transition-all duration-300"
+                        style={{ transform: on ? "translateX(10px)" : "none" }}
+                      >
+                        <span
+                          className={`font-mono text-sm transition-colors duration-300 ${
+                            on ? "text-black/50" : "text-black/20"
+                          }`}
+                        >
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span
+                          className={`font-sans font-extrabold uppercase leading-tight tracking-tight transition-colors duration-300 ${
+                            on ? "text-black" : "text-black/25"
+                          }`}
+                          style={{ fontSize: "clamp(1.25rem, 2.1vw, 2rem)" }}
+                        >
+                          {p.title}
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="mt-8">{moreLink}</div>
+            </div>
+
+            {/* Right: sticky image that crossfades to the active project */}
+            <div className="relative h-[56vh] w-full -translate-y-2 overflow-hidden rounded-2xl ring-1 ring-black/10 shadow-2xl shadow-black/20">
+              <AnimatePresence>
+                <motion.a
+                  key={active}
+                  href={projLive(cur) || undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-0 block"
+                >
+                  <img
+                    src={projImg(cur)}
+                    alt={cur.title}
+                    className="h-full w-full object-cover"
+                  />
+                  {/* title label */}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
+                    <span className="text-lg font-semibold text-white">
+                      {cur.title}
+                    </span>
+                  </div>
+                </motion.a>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

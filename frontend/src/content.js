@@ -5,7 +5,16 @@ export const defaultContent = {
   logo: "ALIJAN",
   nav: ["Home", "About", "Projects", "Services"],
   cta: "Get a quote",
+  // About page — only the resume link is admin-editable for now; the rest of the
+  // page content lives as defaults inside the About component.
+  about: { resumeUrl: "" },
   heroTitle: "PORTFOLIO",
+  loader: {
+    eyebrow: "Ali Jan — 2026",
+    title: "PORTFOLIO",
+    role: "Full Stack Engineer",
+    skills: ["React", "Express", "MongoDB", "Node.js"],
+  },
   image: "/hero.png",
   eyebrow: "Creative Developer",
   greeting: "Hello I'm",
@@ -18,22 +27,54 @@ export const defaultContent = {
     { name: "LinkedIn", icon: "linkedin", href: "#" },
     { name: "Instagram", icon: "instagram", href: "#" },
   ],
-  welcome: {
-    eyebrow: "Why you're here",
-    statement:
-      "Looking for a website that makes your business look as good as it actually is? You're in the right place. I design and build fast, modern websites for companies, startups, and brands turning visitors into customers.",
+  skills: {
+    headingLead: "My",
+    headingAccent: "Skills",
     subline:
-      "From a single landing page to a full product, I handle design and development end to end, clean, responsive, and built to perform.",
+      "Technologies and tools I use to build modern, scalable and efficient digital solutions.",
+    items: [
+      { name: "JavaScript", icon: "https://cdn.simpleicons.org/javascript" },
+      { name: "React", icon: "https://cdn.simpleicons.org/react" },
+      { name: "Node.js", icon: "https://cdn.simpleicons.org/nodedotjs" },
+      { name: "MongoDB", icon: "https://cdn.simpleicons.org/mongodb" },
+      { name: "Express", icon: "https://cdn.simpleicons.org/express/000000" },
+      { name: "Redis", icon: "https://cdn.simpleicons.org/redis" },
+      { name: "Cloudinary", icon: "https://cdn.simpleicons.org/cloudinary" },
+      { name: "Tailwind CSS", icon: "https://cdn.simpleicons.org/tailwindcss" },
+      { name: "shadcn/ui", icon: "https://cdn.simpleicons.org/shadcnui/000000" },
+      { name: "Sanity CMS", icon: "https://cdn.simpleicons.org/sanity" },
+      { name: "Git", icon: "https://cdn.simpleicons.org/git" },
+      { name: "GitHub", icon: "https://cdn.simpleicons.org/github/000000" },
+    ],
   },
   workHeading: "My Work",
+  // Each project: title, description, images[] (slider), tags[], live, source.
+  // `source` is optional — when empty the GitHub link is hidden.
   projects: [
-    { title: "Aurora Commerce", href: "#", img: "https://picsum.photos/seed/aurora/600/440" },
-    { title: "Nimbus Dashboard", href: "#", img: "https://picsum.photos/seed/nimbus/600/420" },
-    { title: "Folio Studio", href: "#", img: "https://picsum.photos/seed/folio/600/460" },
-    { title: "Pulse Fitness", href: "#", img: "https://picsum.photos/seed/pulse/600/400" },
-    { title: "Verdant Travel", href: "#", img: "https://picsum.photos/seed/verdant/600/440" },
-    { title: "Cobalt Finance", href: "#", img: "https://picsum.photos/seed/cobalt/600/420" },
-    { title: "Ember Coffee", href: "#", img: "https://picsum.photos/seed/ember/600/400" },
+    {
+      title: "Virtual Intelligent Tuition Academy",
+      description:
+        "Complete tutor booking platform with Student, Tutor, and Admin roles. Students request tutors, tutors apply, admins approve. Built with a modern tech stack and deployed on Vercel with a Supabase backend.",
+      images: [
+        "https://picsum.photos/seed/vita1/800/450",
+        "https://picsum.photos/seed/vita2/800/450",
+      ],
+      tags: ["React", "TypeScript", "PostgreSQL", "Supabase", "Vercel"],
+      live: "",
+      source: "",
+    },
+    {
+      title: "E-commerce Platform (Scalable) — In Development",
+      description:
+        "A high-performance e-commerce platform built to handle 10,000+ requests/minute. Features AWS deployment, EasyPaisa payment integration, real-time inventory, and a modern UI. Focus on scalability, security, and a seamless user experience.",
+      images: [
+        "https://picsum.photos/seed/khokharmart1/800/450",
+        "https://picsum.photos/seed/khokharmart2/800/450",
+      ],
+      tags: ["React", "Node.js", "Express", "MongoDB", "Redis", "JWT", "Docker"],
+      live: "",
+      source: "",
+    },
   ],
   servicesHeading: "SERVICES",
   services: [

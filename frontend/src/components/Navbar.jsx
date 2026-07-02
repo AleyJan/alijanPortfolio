@@ -1,5 +1,40 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+
+// Home and About are real pages (routes); everything else is a section anchor
+// on the home page (prefixed with "/" so it also works from the About page).
+function navTarget(item) {
+  const k = item.toLowerCase();
+  if (k === "home") return { to: "/", route: true };
+  if (k === "about") return { to: "/about", route: true };
+  if (k === "projects") return { to: "/projects", route: true };
+  return { to: `/#${k}`, route: false };
+}
+
+// Whether a nav item corresponds to the page currently open.
+function isActiveItem(item, pathname) {
+  const k = item.toLowerCase();
+  if (k === "home") return pathname === "/";
+  if (k === "about") return pathname === "/about";
+  if (k === "projects") return pathname === "/projects";
+  return false; // Services is a section, not a standalone page
+}
+
+// Renders a route <Link> or a plain hash <a>, sharing the same styling.
+function NavLink({ target, className, onClick, children }) {
+  if (target.route)
+    return (
+      <Link to={target.to} className={className} onClick={onClick}>
+        {children}
+      </Link>
+    );
+  return (
+    <a href={target.to} className={className} onClick={onClick}>
+      {children}
+    </a>
+  );
+}
 
 // `logo`, `links`, `cta` come from the hero content config. `theme` flips the
 // colours so the navbar stays readable over both dark and white sections.
@@ -11,6 +46,7 @@ export default function Navbar({
 }) {
   const light = theme === "light";
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   const logoColor = light ? "text-espresso" : "text-cream";
   const pill = light
@@ -19,6 +55,10 @@ export default function Navbar({
   const link = light
     ? "text-black/60 hover:bg-black/5 hover:text-black"
     : "text-cream/80 hover:bg-white/15 hover:text-cream";
+  // Active page pill — filled to stand out in both themes.
+  const activeLink = light
+    ? "bg-espresso text-cream"
+    : "bg-cream text-espresso";
   const ctaColor = light
     ? "border-espresso/30 text-espresso hover:bg-espresso hover:text-cream"
     : "border-cream/40 text-cream hover:bg-cream hover:text-espresso";
@@ -33,14 +73,14 @@ export default function Navbar({
     >
       <nav className="relative mx-auto flex max-w-7xl items-center justify-between">
         {/* logo (top-left) */}
-        <a
-          href="#home"
+        <Link
+          to="/"
           onClick={() => setOpen(false)}
           className={`flex items-center gap-2 transition-colors duration-300 ${logoColor}`}
         >
           {/* <span className="text-2xl leading-none">✦</span> */}
           <span className="font-gondens text-xl tracking-wide">{logo}</span>
-        </a>
+        </Link>
 
         {/* glass-morphic nav (centered) — desktop only */}
         <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
@@ -49,12 +89,14 @@ export default function Navbar({
           >
             {links.map((item) => (
               <li key={item}>
-                <a
-                  href={`#${item.toLowerCase()}`}
-                  className={`block rounded-full px-5 py-2 text-sm font-medium transition-colors duration-300 ${link}`}
+                <NavLink
+                  target={navTarget(item)}
+                  className={`block rounded-full px-5 py-2 text-sm font-medium transition-colors duration-300 ${
+                    isActiveItem(item, pathname) ? activeLink : link
+                  }`}
                 >
                   {item}
-                </a>
+                </NavLink>
               </li>
             ))}
           </ul>
@@ -110,13 +152,15 @@ export default function Navbar({
             <ul className="flex flex-col p-2">
               {links.map((item) => (
                 <li key={item}>
-                  <a
-                    href={`#${item.toLowerCase()}`}
+                  <NavLink
+                    target={navTarget(item)}
                     onClick={() => setOpen(false)}
-                    className={`block rounded-2xl px-4 py-3 text-base font-medium transition-colors duration-300 ${link}`}
+                    className={`block rounded-2xl px-4 py-3 text-base font-medium transition-colors duration-300 ${
+                      isActiveItem(item, pathname) ? activeLink : link
+                    }`}
                   >
                     {item}
-                  </a>
+                  </NavLink>
                 </li>
               ))}
               <li className="p-2">

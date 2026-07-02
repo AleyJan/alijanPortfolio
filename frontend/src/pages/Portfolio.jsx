@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import Loader from "../components/Loader.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Hero from "../components/Hero.jsx";
 import Portrait from "../components/Portrait.jsx";
-import Intro from "../components/Intro.jsx";
-import Welcome from "../components/Welcome.jsx";
+import Skills from "../components/Skills.jsx";
 import MyWork from "../components/MyWork.jsx";
-import Services from "../components/Services.jsx";
+// import Services from "../components/Services.jsx"; // Services section hidden
 import Contact from "../components/Contact.jsx";
 import Footer from "../components/Footer.jsx";
 import { defaultContent } from "../content.js";
+import { introState } from "../introState.js";
 import { api } from "../api.js";
 
 // Detects which [data-theme] band currently sits under the navbar, so the
@@ -48,8 +50,21 @@ function useNavTheme(lineFromTop = 64) {
 
 export default function Portfolio() {
   const rootRef = useRef(null);
-  const introRef = useRef(null);
+  const heroRef = useRef(null);
   const navTheme = useNavTheme();
+
+  // Intro loading screen — plays on a real page load, but is skipped when
+  // arriving here via client-side navigation (see introState).
+  const [loading, setLoading] = useState(!introState.shown);
+  useEffect(() => {
+    introState.shown = true;
+  }, []);
+  useEffect(() => {
+    document.body.style.overflow = loading ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [loading]);
 
   // Start from the local fallback, then override with admin-edited content if
   // the API is reachable. If it isn't, the site still renders perfectly.
@@ -99,25 +114,29 @@ export default function Portfolio() {
   }, []);
 
   return (
-    <main ref={rootRef} className="relative">
-      <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-[25] h-32 bg-gradient-to-b from-black via-black/70 to-transparent transition-opacity duration-500 ${
-          navTheme === "light" ? "opacity-0" : "opacity-100"
-        }`}
-      />
-
-      <Navbar
+    <>
+      <AnimatePresence>
+        {loading && (
+          <Loader
+            key="loader"
+            content={content.loader}
+            onDone={() => setLoading(false)}
+          />
+        )}
+      </AnimatePresence>
+      <main ref={rootRef} className="relative">
+        <Navbar
         logo={content.logo}
         links={content.nav}
         cta={content.cta}
         theme={navTheme}
       />
-      <Portrait image={content.image} introRef={introRef} />
-      <Hero title={content.heroTitle} />
-      <Intro ref={introRef} content={content} />
-      <Welcome content={content.welcome} />
+      <Portrait image={content.image} introRef={heroRef} />
+      <Hero ref={heroRef} content={content} />
+      <Skills content={content.skills} />
       <MyWork heading={content.workHeading} projects={content.projects} />
-      <Services heading={content.servicesHeading} services={content.services} />
+      {/* Services section temporarily hidden */}
+      {/* <Services heading={content.servicesHeading} services={content.services} /> */}
       <Contact content={content.contact} />
       <Footer
         logo={content.logo}
@@ -126,6 +145,7 @@ export default function Portfolio() {
         email={content.contact.email}
         footer={content.footer}
       />
-    </main>
+      </main>
+    </>
   );
 }

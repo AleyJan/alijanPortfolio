@@ -14,8 +14,9 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
   fileFilter: (_req, file, cb) => {
-    if (/^image\//.test(file.mimetype)) cb(null, true);
-    else cb(new Error("Only image files are allowed"));
+    if (/^image\//.test(file.mimetype) || file.mimetype === "application/pdf")
+      cb(null, true);
+    else cb(new Error("Only image or PDF files are allowed"));
   },
 });
 
@@ -23,7 +24,8 @@ const upload = multer({
 function uploadToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: "portfolio" },
+      // resource_type "auto" lets Cloudinary accept PDFs (resume) as well as images.
+      { folder: "portfolio", resource_type: "auto" },
       (err, result) => (err ? reject(err) : resolve(result)),
     );
     stream.end(buffer);

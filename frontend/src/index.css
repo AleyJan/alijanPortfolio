@@ -5,7 +5,9 @@
   src: url("./assets/fonts/Gondens-DEMO.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  /* block (not swap) so text never flashes in the fallback font before
+     Gondens loads — it stays invisible for a moment, then paints in Gondens. */
+  font-display: block;
 }
 
 @tailwind base;
@@ -14,6 +16,54 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Skills marquee: two rows of tool icons scrolling in opposite directions.
+   Items are duplicated in the markup, so translating -50% loops seamlessly. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+.animate-marquee-reverse {
+  animation: marquee-reverse 28s linear infinite;
+}
+/* Soft fade at both edges so icons appear/disappear gracefully. */
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+  }
 }
 
 html,

@@ -1,10 +1,20 @@
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   motion,
   useMotionValue,
   useSpring,
 } from "framer-motion";
 import Socials from "./Socials.jsx";
+
+// About and Projects are pages; Home/Services are sections on this (home) page.
+const navHref = (item) => {
+  const k = item.toLowerCase();
+  if (k === "about") return "/about";
+  if (k === "projects") return "/projects";
+  return `#${k}`;
+};
+const isRoute = (item) => ["about", "projects"].includes(item.toLowerCase());
 
 // Button that leans toward the cursor (magnetic), springing back on leave.
 function MagneticButton({ href, children, className }) {
@@ -63,6 +73,10 @@ function Word({ children, accent }) {
 export default function Footer({ logo, nav, socials, email, footer }) {
   const { available, headlineLead, headlineAccent, ctaLabel, trust, copyright } =
     footer;
+  // Gmail compose opens reliably in the browser (no mail client needed).
+  const mailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    email,
+  )}&su=${encodeURIComponent("Project inquiry")}`;
 
   return (
     <footer
@@ -117,7 +131,9 @@ export default function Footer({ logo, nav, socials, email, footer }) {
           <span className="text-sm text-cream/65">
             or email{" "}
             <a
-              href={`mailto:${email}`}
+              href={mailHref}
+              target="_blank"
+              rel="noreferrer"
               className="text-cream underline underline-offset-4 transition-colors hover:text-white"
             >
               {email}
@@ -169,15 +185,25 @@ export default function Footer({ logo, nav, socials, email, footer }) {
         </a>
 
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-cream/60">
-          {nav.map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="transition-colors hover:text-cream"
-            >
-              {item}
-            </a>
-          ))}
+          {nav.map((item) =>
+            isRoute(item) ? (
+              <Link
+                key={item}
+                to={navHref(item)}
+                className="transition-colors hover:text-cream"
+              >
+                {item}
+              </Link>
+            ) : (
+              <a
+                key={item}
+                href={navHref(item)}
+                className="transition-colors hover:text-cream"
+              >
+                {item}
+              </a>
+            ),
+          )}
         </nav>
 
         <Socials items={socials} />

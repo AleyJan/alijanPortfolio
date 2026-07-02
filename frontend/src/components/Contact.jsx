@@ -5,10 +5,12 @@ import { api } from "../api.js";
 
 const EMPTY = { name: "", email: "", projectType: "", message: "" };
 
-// Rises from the bottom over the (pinned) services section via a negative top
-// margin that overlaps the previous section, plus a higher z-index.
 export default function Contact({ content }) {
   const { heading, subline, email, projectTypes = [], socials } = content;
+  // Gmail compose opens reliably in the browser (no mail client needed).
+  const mailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    email,
+  )}&su=${encodeURIComponent("Project inquiry")}`;
   const [form, setForm] = useState(EMPTY);
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
 
@@ -42,7 +44,7 @@ export default function Contact({ content }) {
     <section
       id="contact"
       data-theme="dark"
-      className="relative z-30 -mt-[100vh] flex min-h-screen w-full items-center justify-center bg-black px-6 py-24 text-cream sm:px-10"
+      className="relative z-30 flex min-h-screen w-full items-center justify-center bg-black px-6 py-24 text-cream sm:px-10 lg:-mt-[100vh]"
     >
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -66,7 +68,9 @@ export default function Contact({ content }) {
             {subline}
           </p>
           <a
-            href={`mailto:${email}`}
+            href={mailHref}
+            target="_blank"
+            rel="noreferrer"
             className="mt-6 inline-block w-fit text-sm text-cream/60 underline-offset-4 transition-colors hover:text-cream hover:underline"
           >
             {email}

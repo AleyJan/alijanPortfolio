@@ -99,6 +99,57 @@ function ImageField({ label, value, onChange }) {
   );
 }
 
+// Resume / CV upload (PDF). Same upload endpoint as images (now PDF-enabled).
+function ResumeField({ value, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const upload = async (file) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { url } = await api.uploadImage(file);
+      onChange(url);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs uppercase tracking-wide text-cream/45">
+        Resume / CV (PDF)
+      </span>
+      <input
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Resume PDF URL"
+        className={FIELD}
+      />
+      <div className="mt-2 flex items-center gap-4 text-xs">
+        <label className="inline-block cursor-pointer text-cream/60 hover:text-cream">
+          {busy ? "Uploading…" : "↑ Upload PDF"}
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={(e) => upload(e.target.files?.[0])}
+          />
+        </label>
+        {value && (
+          <a
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+            className="text-cream/60 underline hover:text-cream"
+          >
+            View current ↗
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ContentEditor({ draft, setDraft }) {
   const set = (key, value) => setDraft((d) => ({ ...d, [key]: value }));
   const setIn = (section, key, value) =>
@@ -108,13 +159,23 @@ function ContentEditor({ draft, setDraft }) {
     <div className="grid gap-5 lg:grid-cols-2">
       <Card title="Brand & hero">
         <Input label="Logo" value={draft.logo} onChange={(v) => set("logo", v)} />
-        <Input label="Hero title" value={draft.heroTitle} onChange={(v) => set("heroTitle", v)} />
         <Input label="Navbar CTA label" value={draft.cta} onChange={(v) => set("cta", v)} />
         <ImageField label="Hero portrait" value={draft.image} onChange={(v) => set("image", v)} />
         <StringList label="Nav links" items={draft.nav} onChange={(v) => set("nav", v)} />
       </Card>
 
-      <Card title="Intro">
+      <Card title="About page">
+        <ResumeField value={draft.about?.resumeUrl} onChange={(v) => setIn("about", "resumeUrl", v)} />
+      </Card>
+
+      <Card title="Loading screen">
+        <Input label="Eyebrow (name — year)" value={draft.loader?.eyebrow} onChange={(v) => setIn("loader", "eyebrow", v)} />
+        <Input label="Big title" value={draft.loader?.title} onChange={(v) => setIn("loader", "title", v)} />
+        <Input label="Role" value={draft.loader?.role} onChange={(v) => setIn("loader", "role", v)} />
+        <StringList label="Skill pills" items={draft.loader?.skills} onChange={(v) => setIn("loader", "skills", v)} />
+      </Card>
+
+      <Card title="Hero">
         <Input label="Eyebrow" value={draft.eyebrow} onChange={(v) => set("eyebrow", v)} />
         <Input label="Greeting" value={draft.greeting} onChange={(v) => set("greeting", v)} />
         <Input label="Name" value={draft.name} onChange={(v) => set("name", v)} />
@@ -122,10 +183,27 @@ function ContentEditor({ draft, setDraft }) {
         <StringList label="Rotating roles" items={draft.roles} onChange={(v) => set("roles", v)} />
       </Card>
 
-      <Card title="Welcome">
-        <Input label="Eyebrow" value={draft.welcome?.eyebrow} onChange={(v) => setIn("welcome", "eyebrow", v)} />
-        <Input label="Statement" textarea rows={4} value={draft.welcome?.statement} onChange={(v) => setIn("welcome", "statement", v)} />
-        <Input label="Sub-line" textarea value={draft.welcome?.subline} onChange={(v) => setIn("welcome", "subline", v)} />
+      <Card title="Skills">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input label="Heading (lead)" value={draft.skills?.headingLead} onChange={(v) => setIn("skills", "headingLead", v)} />
+          <Input label="Heading (accent)" value={draft.skills?.headingAccent} onChange={(v) => setIn("skills", "headingAccent", v)} />
+        </div>
+        <Input label="Sub-line" textarea value={draft.skills?.subline} onChange={(v) => setIn("skills", "subline", v)} />
+        <div>
+          <span className="mb-1.5 block text-xs uppercase tracking-wide text-cream/45">
+            Skills — name + icon (powers both the pills and the marquee)
+          </span>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(draft.skills?.items || []).map((s, i) => (
+              <div key={i} className="flex flex-col gap-2 rounded-lg border border-white/10 p-3">
+                <Input label={`Skill ${i + 1} name`} value={s.name} onChange={(v) => setIn("skills", "items", (draft.skills?.items || []).map((x, j) => (j === i ? { ...x, name: v } : x)))} />
+                <ImageField label="Icon" value={s.icon} onChange={(v) => setIn("skills", "items", (draft.skills?.items || []).map((x, j) => (j === i ? { ...x, icon: v } : x)))} />
+                <button type="button" onClick={() => setIn("skills", "items", (draft.skills?.items || []).filter((_, j) => j !== i))} className="w-fit text-xs text-red-400/80 hover:text-red-400">Remove</button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setIn("skills", "items", [...(draft.skills?.items || []), { name: "", icon: "" }])} className="mt-3 w-fit rounded-lg border border-white/15 px-3 py-1.5 text-xs text-cream/70 hover:border-cream/40 hover:text-cream">+ Add skill</button>
+        </div>
       </Card>
 
       <Card title="Footer">
@@ -157,18 +235,41 @@ function ContentEditor({ draft, setDraft }) {
       </Card>
 
       <Card title="Projects">
-        <Input label="Section heading" value={draft.workHeading} onChange={(v) => set("workHeading", v)} />
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(draft.projects || []).map((p, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-lg border border-white/10 p-3">
-              <Input label={`Project ${i + 1} title`} value={p.title} onChange={(v) => set("projects", draft.projects.map((x, j) => (j === i ? { ...x, title: v } : x)))} />
-              <Input label="Link (live / GitHub)" value={p.href} onChange={(v) => set("projects", draft.projects.map((x, j) => (j === i ? { ...x, href: v } : x)))} />
-              <ImageField label="Image" value={p.img} onChange={(v) => set("projects", draft.projects.map((x, j) => (j === i ? { ...x, img: v } : x)))} />
-              <button type="button" onClick={() => set("projects", draft.projects.filter((_, j) => j !== i))} className="w-fit text-xs text-red-400/80 hover:text-red-400">Remove</button>
-            </div>
-          ))}
+        <Input label="Featured heading (home)" value={draft.workHeading} onChange={(v) => set("workHeading", v)} />
+        <p className="-mt-2 text-xs text-cream/40">
+          All projects show on the /projects page; the first 5 are featured on the home page.
+        </p>
+        <div className="flex flex-col gap-4">
+          {(draft.projects || []).map((p, i) => {
+            const patch = (obj) => set("projects", draft.projects.map((x, j) => (j === i ? { ...x, ...obj } : x)));
+            const images = p.images || [];
+            return (
+              <div key={i} className="flex flex-col gap-3 rounded-lg border border-white/10 p-3">
+                <Input label={`Project ${i + 1} title`} value={p.title} onChange={(v) => patch({ title: v })} />
+                <Input label="Description" textarea value={p.description} onChange={(v) => patch({ description: v })} />
+                <StringList label="Tech tags" items={p.tags || []} onChange={(v) => patch({ tags: v })} />
+                <Input label="Live URL" value={p.live} onChange={(v) => patch({ live: v })} />
+                <Input label="Source URL (GitHub — optional; blank hides the link)" value={p.source} onChange={(v) => patch({ source: v })} />
+                <div>
+                  <span className="mb-1.5 block text-xs uppercase tracking-wide text-cream/45">Images (slider)</span>
+                  <div className="flex flex-col gap-2">
+                    {images.map((img, k) => (
+                      <div key={k} className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <ImageField value={img} onChange={(v) => patch({ images: images.map((y, m) => (m === k ? v : y)) })} />
+                        </div>
+                        <button type="button" onClick={() => patch({ images: images.filter((_, m) => m !== k) })} className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-sm text-cream/60 hover:border-red-400/50 hover:text-red-400">✕</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => patch({ images: [...images, ""] })} className="w-fit rounded-lg border border-white/15 px-3 py-1.5 text-xs text-cream/70 hover:border-cream/40 hover:text-cream">+ Add image</button>
+                  </div>
+                </div>
+                <button type="button" onClick={() => set("projects", draft.projects.filter((_, j) => j !== i))} className="w-fit text-xs text-red-400/80 hover:text-red-400">Remove project</button>
+              </div>
+            );
+          })}
         </div>
-        <button type="button" onClick={() => set("projects", [...(draft.projects || []), { title: "", href: "#", img: "" }])} className="w-fit rounded-lg border border-white/15 px-3 py-1.5 text-xs text-cream/70 hover:border-cream/40 hover:text-cream">+ Add project</button>
+        <button type="button" onClick={() => set("projects", [...(draft.projects || []), { title: "", description: "", images: [], tags: [], live: "", source: "" }])} className="w-fit rounded-lg border border-white/15 px-3 py-1.5 text-xs text-cream/70 hover:border-cream/40 hover:text-cream">+ Add project</button>
       </Card>
 
       <Card title="Socials (used across the site)">
