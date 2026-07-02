@@ -1,7 +1,9 @@
 // In dev, Vite proxies /api → Express (vite.config.js), so BASE is empty.
 // In production, set VITE_API_URL to the deployed backend URL (no trailing slash)
 // e.g. https://your-backend.vercel.app — then all requests go there.
-const BASE = import.meta.env.VITE_API_URL ?? "";
+// Strip any trailing slash(es) so `${BASE}/api/...` never produces a double
+// slash (which Vercel 308-redirects — and redirects break CORS preflight).
+const BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
 
 const TOKEN_KEY = "admin_token";
 
