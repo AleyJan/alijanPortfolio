@@ -105,12 +105,12 @@ export default function MyWork({ heading = "My Work", projects = [] }) {
               rel="noreferrer"
               className="group block"
             >
-              <div className="overflow-hidden rounded-2xl ring-1 ring-black/10">
+              <div className="overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-black/10">
                 <img
                   src={projImg(p)}
                   alt={p.title}
                   loading="lazy"
-                  className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  className="aspect-[4/3] w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                 />
               </div>
               <h3 className="mt-4 text-2xl font-extrabold tracking-tight">
@@ -171,7 +171,7 @@ export default function MyWork({ heading = "My Work", projects = [] }) {
             </div>
 
             {/* Right: sticky image that crossfades to the active project */}
-            <div className="relative h-[56vh] w-full -translate-y-2 overflow-hidden rounded-2xl ring-1 ring-black/10 shadow-2xl shadow-black/20">
+            <div className="relative h-[56vh] w-full -translate-y-2 overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-black/10 shadow-2xl shadow-black/20">
               <AnimatePresence>
                 <motion.a
                   key={active}
@@ -187,7 +187,7 @@ export default function MyWork({ heading = "My Work", projects = [] }) {
                   <img
                     src={projImg(cur)}
                     alt={cur.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                   {/* title label */}
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
