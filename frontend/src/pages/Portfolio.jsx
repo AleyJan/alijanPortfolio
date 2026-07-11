@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
-import Loader from "../components/Loader.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Hero from "../components/Hero.jsx";
+import Summary from "../components/Summary.jsx";
 import Portrait from "../components/Portrait.jsx";
 import Skills from "../components/Skills.jsx";
 import MyWork from "../components/MyWork.jsx";
@@ -10,7 +9,6 @@ import MyWork from "../components/MyWork.jsx";
 import Contact from "../components/Contact.jsx";
 import Footer from "../components/Footer.jsx";
 import { defaultContent } from "../content.js";
-import { introState } from "../introState.js";
 import { api } from "../api.js";
 
 // Detects which [data-theme] band currently sits under the navbar, so the
@@ -52,19 +50,6 @@ export default function Portfolio() {
   const rootRef = useRef(null);
   const heroRef = useRef(null);
   const navTheme = useNavTheme();
-
-  // Intro loading screen — plays on a real page load, but is skipped when
-  // arriving here via client-side navigation (see introState).
-  const [loading, setLoading] = useState(!introState.shown);
-  useEffect(() => {
-    introState.shown = true;
-  }, []);
-  useEffect(() => {
-    document.body.style.overflow = loading ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [loading]);
 
   // Start from the local fallback, then override with admin-edited content if
   // the API is reachable. If it isn't, the site still renders perfectly.
@@ -114,18 +99,8 @@ export default function Portfolio() {
   }, []);
 
   return (
-    <>
-      <AnimatePresence>
-        {loading && (
-          <Loader
-            key="loader"
-            content={content.loader}
-            onDone={() => setLoading(false)}
-          />
-        )}
-      </AnimatePresence>
-      <main ref={rootRef} className="relative">
-        <Navbar
+    <main ref={rootRef} className="relative">
+      <Navbar
         logo={content.logo}
         links={content.nav}
         cta={content.cta}
@@ -133,6 +108,7 @@ export default function Portfolio() {
       />
       <Portrait image={content.image} introRef={heroRef} />
       <Hero ref={heroRef} content={content} />
+      <Summary content={content.summary} />
       <Skills content={content.skills} />
       <MyWork heading={content.workHeading} projects={content.projects} />
       {/* Services section temporarily hidden */}
@@ -145,7 +121,6 @@ export default function Portfolio() {
         email={content.contact.email}
         footer={content.footer}
       />
-      </main>
-    </>
+    </main>
   );
 }

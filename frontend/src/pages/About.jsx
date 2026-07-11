@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Socials from "../components/Socials.jsx";
 import { defaultContent } from "../content.js";
-import { introState } from "../introState.js";
 import { api } from "../api.js";
 
 // Deep caramel — the site's accent (#c9a27e) darkened for legible contrast on
@@ -163,10 +162,6 @@ const isRoute = (item) =>
   ["home", "about", "projects"].includes(item.toLowerCase());
 
 export default function About() {
-  // Reaching About counts as the intro having been consumed, so navigating
-  // Home afterwards won't replay the loader.
-  introState.shown = true;
-
   const [content, setContent] = useState(defaultContent);
   useEffect(() => {
     let active = true;

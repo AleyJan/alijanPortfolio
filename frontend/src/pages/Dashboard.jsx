@@ -168,11 +168,15 @@ function ContentEditor({ draft, setDraft }) {
         <ResumeField value={draft.about?.resumeUrl} onChange={(v) => setIn("about", "resumeUrl", v)} />
       </Card>
 
-      <Card title="Loading screen">
-        <Input label="Eyebrow (name — year)" value={draft.loader?.eyebrow} onChange={(v) => setIn("loader", "eyebrow", v)} />
-        <Input label="Big title" value={draft.loader?.title} onChange={(v) => setIn("loader", "title", v)} />
-        <Input label="Role" value={draft.loader?.role} onChange={(v) => setIn("loader", "role", v)} />
-        <StringList label="Skill pills" items={draft.loader?.skills} onChange={(v) => setIn("loader", "skills", v)} />
+      <Card title="Home summary">
+        <Input label="Eyebrow" value={draft.summary?.eyebrow} onChange={(v) => setIn("summary", "eyebrow", v)} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input label="Heading (lead)" value={draft.summary?.headingLead} onChange={(v) => setIn("summary", "headingLead", v)} />
+          <Input label="Heading (accent)" value={draft.summary?.headingAccent} onChange={(v) => setIn("summary", "headingAccent", v)} />
+        </div>
+        <Input label="Summary paragraph" textarea value={draft.summary?.body} onChange={(v) => setIn("summary", "body", v)} />
+        <StringList label="Highlight pills" items={draft.summary?.highlights} onChange={(v) => setIn("summary", "highlights", v)} />
+        <Input label="Button label" value={draft.summary?.ctaLabel} onChange={(v) => setIn("summary", "ctaLabel", v)} />
       </Card>
 
       <Card title="Hero">

@@ -9,12 +9,6 @@ export const defaultContent = {
   // page content lives as defaults inside the About component.
   about: { resumeUrl: "" },
   heroTitle: "PORTFOLIO",
-  loader: {
-    eyebrow: "Ali Jan — 2026",
-    title: "PORTFOLIO",
-    role: "Full Stack Engineer",
-    skills: ["React", "Express", "MongoDB", "Node.js"],
-  },
   image: "/hero.png",
   eyebrow: "Creative Developer",
   greeting: "Hello I'm",
@@ -27,6 +21,21 @@ export const defaultContent = {
     { name: "LinkedIn", icon: "linkedin", href: "#" },
     { name: "Instagram", icon: "instagram", href: "#" },
   ],
+  // Brief professional summary shown on the Home page, right after the hero.
+  // Editable from the admin dashboard.
+  summary: {
+    eyebrow: "About Me",
+    headingLead: "Who is",
+    headingAccent: "Ali?",
+    body: "I'm Ali Jan, a Full-Stack Developer from Pakistan specializing in the MERN stack. Over the past two years I've built and shipped real production apps — from a complete e-commerce platform for a UK-based client to booking systems and admin dashboards. I'm currently interning remotely at Dev Weekends and researching AI/ML through the SISTER program, always focused on turning real problems into clean, reliable products people enjoy using.",
+    highlights: [
+      "2+ Years Experience",
+      "MERN Stack Developer",
+      "AI/ML Researcher",
+      "BS Computer Science",
+    ],
+    ctaLabel: "More about me",
+  },
   skills: {
     headingLead: "My",
     headingAccent: "Skills",

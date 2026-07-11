@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Socials from "../components/Socials.jsx";
 import { defaultContent } from "../content.js";
-import { introState } from "../introState.js";
 import { api } from "../api.js";
 
 const ACCENT = "#a9713a";
@@ -152,8 +151,6 @@ const isRoute = (item) =>
   ["home", "about", "projects"].includes(item.toLowerCase());
 
 export default function Projects() {
-  introState.shown = true;
-
   const [content, setContent] = useState(defaultContent);
   useEffect(() => {
     let active = true;
